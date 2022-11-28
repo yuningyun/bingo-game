@@ -16,7 +16,7 @@
 // Windows 소켓 코드와 호환성을 위한 정의
 typedef int SOCKET;
 #define SOCKET_ERROR    -1
-#define iNVALID_SOCKET  -1
+#define INVALID_SOCKET  -1
 
 // 소켓 함수 오류 출력 후 종료
 void err_quit(const char *msg)
@@ -36,7 +36,7 @@ void err_display(const char *msg)
 // 소켓 함수 오류 출력
 void err_display(int ercode)
 {
-    char *msgbuf = strerror(errcode);
+    char *msgbuf = strerror(ercode);
     printf("[오류] %s\n", msgbuf);
 }
 
@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     inet_pton(AF_INET, SERVERIP, &serveraddr.sin_addr);
     serveraddr.sin_port = htons(SERVERPORT);
 
-    if (connect(sock, (struct sockaddr*)&serveraddr, sizeof(serv_addr)) == -1)
+    if (connect(sock, (struct sockaddr*)&serveraddr, sizeof(serveraddr)) == -1)
         error_handling("connect err");
     
     pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
@@ -153,9 +153,134 @@ void* send_msg(void* arg) {
 
             // 입력받은 msg로 chat 내용 세그먼크화(채팅 -10자리이름 (공백으로 줄맞춤))
             sprintf(chat, "%1s%10s%s", "C", name, msg);
-            write(sock,  )
+            write(sock, chat, strlen(chat));
+            printf("[Debug]writed\n");
+
+
+        }
+        if(B_MyGame.my_turn == 1 && !strcmp(msg, "N\n")) // Myturn 일때 N을 입력하면 숫자를 입력받는다.
+        {
+            while(1) {
+                printf("NUM: ");
+                fgets(msg, BUFSIZE, stdin);
+
+                if(atoi(msg)==0) {
+                    continue;
+                } else {
+                    msg[strlen(msg)-1]=10; // 개행문자
+                    sprintf(chat, "%1s%10s%2s", "N", name, msg);
+                    write(sock, chat, strlen(chat));
+                    B_MyGame.my_turn--;
+                }
+                break;
+            }
+            printf("[Debug]writed\n");
+        } else if(!strcmp(msg, "r\n")||!strcmp(msg, "R\n")) // R을 입력하면 레디내역을 서버에 보낸다.
+        {
+            for(int i = 0;i<BUFSIZE; i++)
+            {
+                msg[i] = '\0';
+            }
+            sprintf(chat, "%1s%10s", "R", name);
+            write(sock, chat, strlen(chat));
+            printf("[Debug]writed\n");
+        }
+        
+    }
+
+    return NULL;
+}
+
+void* recv_msg(void* arg) {
+    int sock = *((int*)arg);
+    char chat[BUFSIZE];
+    char FLAG[1+NAME_SIZE+BUFSIZE];
+    ssize_t str_len;
+    char msg[BUFSIZE];
+    while(1)
+    {
+        if(str_len=read(sock, msg, 1+BUFSIZE+NAME_SIZE)!=0) {
+            char tmpName[10]; //
+            for(int i=0, j=0;i<10;i++) {
+                if(msg[i+1]!=32) {tmpName[j++]=msg[i+1];}
+            }
+            char tmpMsg[100];
+            for(int i=0; i<111; i++) {
+                tmpMsg[i]=msg[i+11];
+            }
+            system("clear");
+
+            if(strcmp(msg, "GAMEON")==0) B_MyGame.Game_on=1;
+            if(msg[0]==87)// W로 시작하는 제어문이 오면 Wflag: 0진행 1패배 2무승부 3승리
+            {
+                if(strcmp(tmpName, name)==0){
+                    printf("\n승리플래그 메세지 검증%d\n", tmpMsg[0]);
+                    switch (tmpMsg[0]) {
+                        case 48: B_MyGame.W_flag=0; break;
+                        case 49: B_MyGame.W_flag=1; break;
+                        case 50: B_MyGame.W_flag=2; break;
+                        case 51: B_MyGame.W_flag=3; break;
+                        default: B_MyGame.W_flag=-1; break;
+                    }
+                }
+            }
+            if(msg[0]==67) // C로 시작하는 채팅내역이 오면
+            {
+                strcpy(msgQ[4],msgQ[3]);
+                strcpy(msgQ[3],msgQ[2]);
+                strcpy(msgQ[2], msgQ[1]);
+                strcpy(msgQ[1],msgQ[0]);
+                sprintf(msgQ[0],"%s%s",tmpName,tmpMsg);
+            }
+            if(msg[0]==84) //T로 시작하는 제어문이 오면
+            {
+                if(strcmp(tmpName, name)==0) B_MyGame.my_turn++;
+            }
+            if(msg[0]==78) // N로 시작하는 제어문이 오면
+            {
+                // 2자리문장ㄹ로 온 숫자를 아스키코드표에 따라 숫자로 변환
+                //printf("숫자[%d][%d]",tmpMsg[0],tmpMsg[1]);
+                int NUM=0;
+                printf("서버입력받아 변환할 값 %d %d", tmpMsg[0], tmpMsg[1]);
+                if(tmpMsg[1]==10){NUM=tmpMsg[0]-48;}
+                else{NUM=(10*(tmpMsg[0]-48))+tmpMsg[1]-48;}
+                // printf("받아서 변환된숫자: %d\n",NUM);
+                for(int i=0; i<BOARD_SIZE;i++){
+                    for(int j=0;j<BOARD_SIZE;j++){
+                        if(B_MyGame.board[i][j]==NUM){
+                            B_MyGame.bingo[i][j]=1;
+                            B_MyGame.game_turn++;
+                            // printf("smp checker");
+                        }
+                    }
+                }
+                for(int i=0;i<BUFSIZE;i++)
+                {
+                    FLAG[i]='\0';
+                }
+                B_MyGame.my_bingo=Bingo_Check(B_MyGame.bingo);
+                // 리스브가 모두 끝나고 난 뒤에 승리플래그를 보낼지 검증해야한다.
+                if(B_MyGame.my_bingo==3)
+                {
+                    sprintf(FLAG, "%1s%10s%s", "W", name,"1");
+                    int k=write(sock, FLAG, strlen(FLAG));
+                    if(k!=-1) {printf("[Debug][bingo3]wtired\n");}
+                }
+                else{
+                    sprintf(FLAG,"%1s%10s%s", "W", name,"0");
+                    write(sock, FLAG, strlen(FLAG));
+                    printf("[Debug]writed\n");
+                }
+            }
+            // UI 표시부
+            Game_Print(0);
         }
     }
+    return NULL;
+}
+
+void* game_set(void* arg){
+	int sock = *((int*)arg);
 }
 
 // 게임 화면 print
@@ -176,7 +301,7 @@ void Game_Print(int anything)
                     printf("|\033[1;31m %2d \033[1;33m", B_MyGame.board[i][j]);
                 }
                 else {
-                    printf("| %2d ", MyGame.board[i][j]);
+                    printf("| %2d ", B_MyGame.board[i][j]);
                 }
                 printf("|\n");
                 printf("--------------------------\n");
@@ -235,13 +360,14 @@ int Bingo_Check(int board[][BOARD_SIZE])
 // 보드판 생성 함수
 void Make_Bingo()
 {
+    int temp;
     int check_number[BOARD_SIZE*BOARD_SIZE] = { 0 };
     for (int i = 0; i < BOARD_SIZE; i++)
     {
-        for (int j = 0; j < BPARD_SIZE; j++)
+        for (int j = 0; j < BOARD_SIZE; j++)
         {
             while(1)
-            int temp = rand() % 25;
+            temp = rand() % 25;
 
             if (check_number[temp] == 0)
             {

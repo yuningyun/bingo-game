@@ -43,7 +43,7 @@ void err_display(int ercode)
 // 서버 IP 학교 IP주소 입력 //220.149.128.100 or 220.149.128.103
 char *SERVERIP = (char *)"220.149.128.100";
 int SERVERPORT = 4018; // 포트 번호 내자리 18으로 4018, 4118, 4218, 4318, 4418, 4518 사용가능
-#define BUFSIZE 512 // 버퍼 사이즈
+#define BUFSIZE 100 // 버퍼 사이즈
 
 #define BOARD_SIZE  5
 #define NAME_SIZE   10
@@ -75,10 +75,15 @@ void* send_msg(void* arg);  // 서버에 메세지 보내기
 void* recb_msg(void* arg);  // 메세지 받아오기
 void* game_set(void* arg);  // game start
 
+void error_handling(char* mse);
+
 // main 문
 int main(int argc, char* argv[])
 {
-    int retval;
+    // 사용 변수
+    pthread_t snd_thread, rcv_thread, game_thread;
+    void* thread_return;
+
 
     // 명령행 인수가 있으면 IP 주소로 사용
     if (argc > 1) SERVERIP = argv[1];
@@ -95,15 +100,62 @@ int main(int argc, char* argv[])
     serveraddr.sin_family = AF_INET;
     inet_pton(AF_INET, SERVERIP, &serveraddr.sin_addr);
     serveraddr.sin_port = htons(SERVERPORT);
-    retval = connect(sock, (struct sockaddr *)&serveraddr, sizeof(serveraddr));
-    if (retval == SOCKET_ERROR) err_quit("connect()");
 
-    // 데이터 통신에 사용할 변수
-
-    // 서버와 데이터 통신
-
+    if (connect(sock, (struct sockaddr*)&serveraddr, sizeof(serv_addr)) == -1)
+        error_handling("connect err");
     
+    pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
+	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
+	pthread_create(&game_thread, NULL, game_set, (void*)&sock);
 
+    pthread_join(snd_thread, &thread_return);
+	pthread_join(rcv_thread, &thread_return);
+	pthread_join(game_thread, &thread_return);
+	
+    if(1){
+        close(sock);
+        return 0;
+    }
+}
+
+// error 출력
+void error_handling(char* msg)
+{
+	fputs(msg, stderr);
+	fputc('\n', stderr);
+	exit(1);
+}
+
+// send_msg 서버에 msg 전송
+void* send_msg(void* arg) {
+    int sock = *((int*)arg);
+    char set[111];
+    sprintf(set, "%1s%10s", "S", name); // 이름 최초 1회 검증
+    write(sock, set, strlen(set));
+    while(1)
+    {
+        char msg[BUFSIZE];
+        char chat[NAME_SIZE+BUFSIZE+2];
+        // 배열버퍼, stdin버퍼 초기화
+
+        fgets(msg, BUFSIZE, stdin);
+        if(!strcmp(msg, "q\n")||!strcmp(msg,"Q\n")) // Q 입력시 종료
+        {
+            close(sock);
+            exit(0);
+        }
+        if(!strcmp(msg, "c\n")||!strcmp(msg, "C\n")) // C 입력시 채팅창 출력
+        {
+            printf("type msg: ");
+
+            fgets(msg, BUFSIZE, stdin);
+            msg[strlen(msg)-1]='\0';
+
+            // 입력받은 msg로 chat 내용 세그먼크화(채팅 -10자리이름 (공백으로 줄맞춤))
+            sprintf(chat, "%1s%10s%s", "C", name, msg);
+            write(sock,  )
+        }
+    }
 }
 
 // 게임 화면 print

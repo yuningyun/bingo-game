@@ -72,7 +72,7 @@ void Make_Bingo();                  // 빙고판 만들기
 int Bingo_Check(int board[][BOARD_SIZE]);   // 빙고 개수 체크
 
 void* send_msg(void* arg);  // 서버에 메세지 보내기
-void* recb_msg(void* arg);  // 메세지 받아오기
+void* recv_msg(void* arg);  // 메세지 받아오기
 void* game_set(void* arg);  // game start
 
 void error_handling(char* mse);

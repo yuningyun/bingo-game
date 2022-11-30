@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 		int str_len;
 		char msg[1+NAME_SIZE+BUF_SIZE];
 		clnt_adr_sz = sizeof(clnt_adr);
-		clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, &clnt_adr_sz);
+		clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, (socklen_t*)&clnt_adr_sz);
 
 		pthread_mutex_lock(&mutx);
 		clnt_socks[clnt_cnt] = clnt_sock;

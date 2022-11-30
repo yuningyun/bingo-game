@@ -1,18 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/wait.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <pthread.h>
+#include <stdio.h>      // printf(), ...
+#include <stdlib.h>     // exit(), ...
+#include <time.h>       // 현재 시간, 날짜 구하기
+#include <string.h>     // strerror(), strcmp(), ...
+#include <unistd.h>     // close(), ...
+#include <arpa/inet.h>  // htons(), htonl(), ...
+#include <sys/socket.h> // socket(), AF_INET, ...
+#include <sys/select.h> // 다중 입출력
+#include <netinet/in.h> // connect(), sendmsg(), sendto(), ...
+#include <pthread.h>    // pthread_create(), ...
+#include <signal.h>		// 시그널에 따라 프로세스를 종료하거나, 코어 덤프를 생성
+#include <sys/wait.h>	// 프로세스의 상태를 얻어온다.
+
 #define BOARD_SIZE 5
 #define NAME_SIZE 10
-#define BUF_SIZE 100
-#define BACKLOG 3 
+#define BUFSIZE 100
+#define BACKLOG 3
 #define MAX_CLNT 256
 
 void error_handling(char* mse);
@@ -38,12 +40,15 @@ struct Clnt{
 	int R;//0은 준비중 1은 준비완료 2는 게임중 3은 게임중+
 	int Bingo;//
 };
+
 struct Clnt C[MAX_CLNT]; //what a massive
-char msgQ[5][NAME_SIZE+BUF_SIZE+1]; //SND쓰레드와 RCV쓰레드가 함께 사용하므로 전역변수
+char msgQ[5][NAME_SIZE+BUFSIZE+1]; //SND쓰레드와 RCV쓰레드가 함께 사용하므로 전역변수
 pthread_mutex_t mutx;
 pthread_t t_id;
 pthread_t t_id2;
 pthread_t t_id3;
+
+int SERVERPORT = 4018; // 서버에서 열 포트
 
 int main(int argc, char* argv[])
 {
@@ -52,20 +57,27 @@ int main(int argc, char* argv[])
 	int clnt_adr_sz;
 	char name[NAME_SIZE]="[DEFAULT]";
 	pthread_t t_id;
-	if (argc != 2) {
-		printf("insert port.");
+
+	// 포트가 입력되었다면 입력된 포트를 열기위해 포트 저장
+	if (argc == 2) {
+		SERVERPORT = atoi(argv[1]);
 	}
+
+	// 소켓 생성
 	pthread_mutex_init(&mutx, NULL);
 	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
 
 	memset(&serv_adr, 0, sizeof(serv_adr)); 
 	serv_adr.sin_family = AF_INET; 
 	serv_adr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	serv_adr.sin_port = htons(atoi(argv[1])); 
+	serv_adr.sin_port = htons(SERVERPORT); 
 
+	// bind()
 	if (bind(serv_sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr)) == 1) {
 		error_handling("bind() error");
 	}
+
+	// listen()
 	if (listen(serv_sock, 5) == -1) {
 		error_handling("listen() error");
 	}
@@ -80,9 +92,9 @@ int main(int argc, char* argv[])
 	
 	while (Game_on!=1) {
 		int str_len;
-		char msg[1+NAME_SIZE+BUF_SIZE];
+		char msg[1+NAME_SIZE+BUFSIZE];
 		clnt_adr_sz = sizeof(clnt_adr);
-		clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, &clnt_adr_sz);
+		clnt_sock = accept(serv_sock, (struct sockaddr*)&clnt_adr, (socklen_t*)&clnt_adr_sz);
 
 		pthread_mutex_lock(&mutx);
 		clnt_socks[clnt_cnt] = clnt_sock;
@@ -111,7 +123,7 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 	int clnt_sock = *((int*)arg);
 	int str_len = 0, i;
 	//int win_check=0; //전역변수로  되었음
-	char msg[1+NAME_SIZE+BUF_SIZE];
+	char msg[1+NAME_SIZE+BUFSIZE];
 	//handle_clnt의 메세지 수신부분
 	send_msg("",1,0);//서로 연결이 확정되면 의미없는 문장을 보내서, 클라이언트의 RCV와 game_print를 활성화시킨다
 	while ((str_len = read(clnt_sock, msg, sizeof(msg))) != 0)
@@ -159,13 +171,13 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 			strcpy(msgQ[1],msgQ[0]);
 			strcpy(msgQ[0],tmpNameMsg);
 						
-			char sendMsg[BUF_SIZE+NAME_SIZE+1+1];
+			char sendMsg[BUFSIZE+NAME_SIZE+1+1];
 			sprintf(sendMsg,"%s%10s%s","C",tmpName,tmpMsg);
 
 			//sprintf(tmpNameMsg,"%s",tmpMsg);
-			//send_msg(msgQ[0], 1+NAME_SIZE+BUF_SIZE,1);
+			//send_msg(msgQ[0], 1+NAME_SIZE+BUFSIZE,1);
 
-			send_msg(sendMsg, 1+NAME_SIZE+BUF_SIZE,11);
+			send_msg(sendMsg, 1+NAME_SIZE+BUFSIZE,11);
 		}
 		
 			//S로 시작하는 네임세팅이 오면
@@ -192,25 +204,25 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 					if(strcmp(C[i].NAME,tmpName)==0)
 					{
 						C[i].R=2;
-						char tmp[1+NAME_SIZE+BUF_SIZE];
+						char tmp[1+NAME_SIZE+BUFSIZE];
 						if(i==clnt_cnt-1){
 							C[0].R=3;
 							sprintf(tmp,"%1s%10s","T",C[0].NAME);
-							send_msg(tmp,1+NAME_SIZE+BUF_SIZE,5);		
+							send_msg(tmp,1+NAME_SIZE+BUFSIZE,5);		
 						}
 						else{
 							C[i+1].R=3;
 							sprintf(tmp,"%1s%10s","T",C[i+1].NAME);
-							send_msg(tmp,1+NAME_SIZE+BUF_SIZE,5);		
+							send_msg(tmp,1+NAME_SIZE+BUFSIZE,5);		
 						}
-						char tmp2[1+NAME_SIZE+BUF_SIZE];
+						char tmp2[1+NAME_SIZE+BUFSIZE];
 						sprintf(tmp2,"%1s%10s%2s","N","SERV",tmpMsg);
-						send_msg(tmp2,1+NAME_SIZE+BUF_SIZE,5);						
+						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);						
 					}		
 				}
 			}
 		///*
-		for(int i=0; i<1+NAME_SIZE+BUF_SIZE;i++){
+		for(int i=0; i<1+NAME_SIZE+BUFSIZE;i++){
 			msg[i]='\0';
 		}
 		//*/
@@ -233,10 +245,11 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 	close(clnt_sock);
 	return NULL;
 }
+
 void* handle_game(void* arg){
 	while(1)
 	{
-		char tmp[1+BUF_SIZE+NAME_SIZE];
+		char tmp[1+BUFSIZE+NAME_SIZE];
 		//sum으로 R준비여부를 수집하여 연산
 		if(clnt_cnt>1&&C[0].R==1&&Game_on==0)
 		{
@@ -250,16 +263,16 @@ void* handle_game(void* arg){
 			{	
 				//게임을 시작하는 동안에는 다른 연산을 멈추고 게임에 맞도록 변수를 설정한다.
 				pthread_mutex_init(&mutx, NULL);
-				send_msg("GAMEON",1+BUF_SIZE+NAME_SIZE,3);
+				send_msg("GAMEON",1+BUFSIZE+NAME_SIZE,3);
 				sleep(1);
-				send_msg("GAMEON",1+BUF_SIZE+NAME_SIZE,3);//왜 인지 모르겠지만 가장 전송누락이 잦은 부분. 주의
+				send_msg("GAMEON",1+BUFSIZE+NAME_SIZE,3);//왜 인지 모르겠지만 가장 전송누락이 잦은 부분. 주의
 				for(int i=0;i<clnt_cnt;i++)
 				{
 					C[i].R=2;
 				}
 				C[0].R=3;
 				sprintf(tmp,"%1s%10s","T",C[0].NAME);
-				send_msg(tmp,1+BUF_SIZE+NAME_SIZE,4);
+				send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
 				pthread_mutex_unlock(&mutx);
 			}
 		}
@@ -283,11 +296,11 @@ void* handle_game(void* arg){
 				for(int i=0; i<clnt_cnt; i++){
 					if(C[i].Bingo==1){
 						sprintf(tmp,"%1s%10s%s","W",C[i].NAME,"3");
-						send_msg(tmp,1+BUF_SIZE+NAME_SIZE,7);
+						send_msg(tmp,1+BUFSIZE+NAME_SIZE,7);
 					}
 					else{
 						sprintf(tmp,"%1s%10s%s","W",C[i].NAME,"1");
-						send_msg(tmp,1+BUF_SIZE+NAME_SIZE,8);
+						send_msg(tmp,1+BUFSIZE+NAME_SIZE,8);
 					}
 				}
 			}
@@ -296,11 +309,11 @@ void* handle_game(void* arg){
 				for(int i=0; i<clnt_cnt; i++){
 					if(C[i].Bingo==1){
 						sprintf(tmp,"%1s%10s%s","W",C[i].NAME,"2");
-						send_msg(tmp,1+BUF_SIZE+NAME_SIZE,9);
+						send_msg(tmp,1+BUFSIZE+NAME_SIZE,9);
 					}
 					else{
 						sprintf(tmp,"%1s%10s%s","W",C[i].NAME,"1");
-						send_msg(tmp,1+BUF_SIZE+NAME_SIZE,10);
+						send_msg(tmp,1+BUFSIZE+NAME_SIZE,10);
 					}
 				}
 			}
@@ -310,6 +323,7 @@ void* handle_game(void* arg){
 		pthread_mutex_unlock(&mutx);
 	}
 }
+
 void* status_board(void* arg){
 	while(1){
 	//접속클라이언트 현황
@@ -337,6 +351,7 @@ void* status_board(void* arg){
 		system("clear");
 	}
 }
+
 void send_msg(char* msg, int len, int index) {//index는 디버그용, 아무값이나 넣어도됌
 	int i;
 	pthread_mutex_lock(&mutx);
@@ -345,4 +360,3 @@ void send_msg(char* msg, int len, int index) {//index는 디버그용, 아무값
 	pthread_mutex_unlock(&mutx);
 	printf("[Debug] %d sendALL\n",index);
 }
-

@@ -21,6 +21,10 @@ void error_handling(char* mse);
 void game_print(int any);
 int bingo_check(int board[][BOARD_SIZE]);
 
+// 서버 IP 학교 IP주소 입력 // 220.149.128.100 or 220.149.128.103
+char *SERVERIP = (char *)"220.149.128.100";
+int SERVERPORT = 4018; // 기본 포트 번호
+
 //게임관련 구조체로 묶을 변수
 struct Game{
     int Game_on;
@@ -71,18 +75,37 @@ int main(int argc, char* argv[])
 
 
 
-	if (argc != 4) {
-		printf("ip, port, name");
-		exit(1);
+	// 인수가 1개 들어왔을 때 error
+	if(argc == 1) {
+		// error 문구 출력
+		printf("name 이나\n");
+		printf("port, name이나\n");
+		printf("ip, port, name을 입력하세요\n");
+		exit(1);	
 	}
-	sprintf(name,"[%s]",argv[3]);
+	// 인수가 2개 일때 name 저장
+	else if (argc == 2) {
+		sprintf(name, "[%s]", argv[1]);
+	}
+	// 인수가 3개 일때 PORT, name 저장
+	else if(argc == 3) {
+		sprintf(name, "[%s]", argv[2]);
+		SERVERPORT = atoi(argv[1]);
+	}
+	// 인수가 4개 들어왔을 때
+	else if (argc == 4) {
+		printf("ip, port, name");
+		sprintf(name,"[%s]",argv[3]); // 4번째 인수를 이름으로 저장
+		sprintf(SERVERIP, "%s", argv[1]); // SERVERIP 주소 저장
+		SERVERPORT = atoi(argv[2]); // SERVERPORT 저장
+	}
 
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family=AF_INET;
-	serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
-	serv_addr.sin_port = htons(atoi(argv[2]));
+	serv_addr.sin_addr.s_addr = inet_addr(SERVERIP);
+	serv_addr.sin_port = htons(SERVERPORT);
 
 	if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == -1)
 		error_handling("connect err");
@@ -101,6 +124,7 @@ int main(int argc, char* argv[])
     }
 }
 
+// 서버에 msg보내는 함수
 void* send_msg(void* arg) {
 	int sock = *((int*)arg);
 	char set[111];
@@ -174,6 +198,7 @@ void* send_msg(void* arg) {
 	return NULL;
 }
 
+// 받은 msg 처리하는 함수
 void* recv_msg(void* arg) {
 	int sock = *((int*)arg);
 	char chat[BUFSIZE];

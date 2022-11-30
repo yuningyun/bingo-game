@@ -17,9 +17,11 @@ void* send_msg(void* arg);
 void* recv_msg(void* arg);
 void* game_set(void* arg);
 
-void error_handling(char* mse); 
-void game_print(int any);
-int bingo_check(int board[][BOARD_SIZE]);
+void error_handling(char* mse);
+
+void game_Print(int anything);      // 게임 print
+void Make_Bingo();                  // 빙고판 만들기
+int Bingo_Check(int board[][BOARD_SIZE]);   // 빙고 개수 체크
 
 // 서버 IP 학교 IP주소 입력 // 220.149.128.100 or 220.149.128.103
 char *SERVERIP = (char *)"220.149.128.100";
@@ -31,7 +33,7 @@ struct Game{
     int game_turn;
     int my_turn;
     int my_bingo; 
-    int winFlag; //Wflag: 0진행 1패배 2무승부 3승리
+    int Win_flag; //Wflag: 0진행 1패배 2무승부 3승리
     int board[BOARD_SIZE][BOARD_SIZE];
     int bingo[BOARD_SIZE][BOARD_SIZE];
 
@@ -92,7 +94,7 @@ int main(int argc, char* argv[])
 		sprintf(name, "[%s]", argv[2]);
 		SERVERPORT = atoi(argv[1]);
 	}
-	// 인수가 4개 들어왔을 때
+	// 인수가 4개 들어왔을 때 SERVERIP, SERVERPORT, name 저장
 	else if (argc == 4) {
 		printf("ip, port, name");
 		sprintf(name,"[%s]",argv[3]); // 4번째 인수를 이름으로 저장
@@ -100,8 +102,10 @@ int main(int argc, char* argv[])
 		SERVERPORT = atoi(argv[2]); // SERVERPORT 저장
 	}
 
+	// 소켓 생성
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 
+	// connect()
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family=AF_INET;
 	serv_addr.sin_addr.s_addr = inet_addr(SERVERIP);
@@ -224,11 +228,11 @@ void* recv_msg(void* arg) {
 				if(strcmp(tmpName, name)==0){
 					printf("\n승리플래그 메세지 검증%d\n",tmpMsg[0]);
 					switch (tmpMsg[0]) {
-						case 48 : B_MyGame.winFlag=0; break;
-						case 49 : B_MyGame.winFlag=1; break;
-						case 50 : B_MyGame.winFlag=2; break;
-						case 51 : B_MyGame.winFlag=3; break;						
-						default : B_MyGame.winFlag=-1; break;						
+						case 48 : B_MyGame.Win_flag=0; break;
+						case 49 : B_MyGame.Win_flag=1; break;
+						case 50 : B_MyGame.Win_flag=2; break;
+						case 51 : B_MyGame.Win_flag=3; break;						
+						default : B_MyGame.Win_flag=-1; break;						
 					}
 				}
 			}
@@ -296,6 +300,7 @@ void* game_set(void* arg){
 	int sock = *((int*)arg);
 }
 
+// error 관리
 void error_handling(char* msg)
 {
 	fputs(msg, stderr);
@@ -303,6 +308,7 @@ void error_handling(char* msg)
 	exit(1);
 }
 
+// game print 게임 내용 출력
 void game_print(int any)
 {
 	if(B_MyGame.Game_on==1){
@@ -311,7 +317,7 @@ void game_print(int any)
 
 	printf("@----- client bingo -----@\n");
 	printf("turn: %3d bingo: %3d\n", B_MyGame.game_turn, B_MyGame.my_bingo);
-	printf("+----+----+----+----+----+\n");
+	printf("*-----*-----*-----*-----*-----*\n");
 	for (i = 0; i < BOARD_SIZE; i++)
 	{
 		for (j = 0; j < BOARD_SIZE; j++)
@@ -334,7 +340,7 @@ void game_print(int any)
 				printf("| %2d ", B_MyGame.board[i][j]);
 		}
 		printf("|\n");
-		printf("+----+----+----+----+----+\n");
+		printf("*-----*-----*-----*-----*-----*\n");
 	}
 	
 	printf("%c[0m", 27);
@@ -349,18 +355,21 @@ void game_print(int any)
 		printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	}
 	printf("=====================================\n");
-	if(B_MyGame.winFlag==3){printf("YOU WIN!!\n");}
-	else if(B_MyGame.winFlag==2){printf("DRAW!!\n");}
-	else if(B_MyGame.winFlag==1){printf("LOSE\n");}
-	else if(B_MyGame.winFlag==-1){printf("ERR\n");}
-	else if(B_MyGame.my_turn==1){printf("its your turn\n");}
+	if(B_MyGame.Win_flag==3){printf("YOU WIN!!\n");} // Win_flag 3일때 승리
+	else if(B_MyGame.Win_flag==2){printf("DRAW!!\n");} // Win_flag 2일때 무승부
+	else if(B_MyGame.Win_flag==1){printf("LOSE\n");} // Win_flag 1일때 패배
+	else if(B_MyGame.Win_flag==-1){printf("ERR\n");} // Win_flag -1일때 에러
+	else if(B_MyGame.my_turn==1){printf("its your turn\n");} // 내차례
 	else {printf("\n");}
 	printf("=====================================\n");
-	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]);
+	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");
 	printf("C to chat,R to Ready,N to Number Q to quit\n");
 }
 
+// 빙고 개수가 몇개인지 체크하는 함수
+//빙고 체크 함수, 매개변수로 넘어온 배열(빙고판)의
+//체크된 것을 모두 확인해서 빙고수를 반환한다.
 int bingo_check(int board[][BOARD_SIZE])
 {
 	int i;
@@ -384,4 +393,28 @@ int bingo_check(int board[][BOARD_SIZE])
 	if(board[0][4]==1&&board[1][3]==1&&board[2][2]==1&&board[3][1]==1&&board[4][0]==1)
 		count++;
 	return count;
+}
+
+// 보드판 생성 함수,
+// 원래 초기에 1번 정해진 보드판으로 게임을 진행하게 되는데
+// 원하는 보드판이 나올 때까지 보드판을 변경할 수 있도록한다.
+void Make_Bingo()
+{
+    int temp;
+    int check_number[BOARD_SIZE*BOARD_SIZE] = { 0 };
+    for (int i = 0; i < BOARD_SIZE; i++)
+    {
+        for (int j = 0; j < BOARD_SIZE; j++)
+        {
+            while(1)
+            temp = rand() % 25;
+
+            if (check_number[temp] == 0)
+            {
+                check_number[temp] = 1;
+                B_MyGame.board[i][j] = temp + 1;
+                break;
+            }
+        }
+    }
 }

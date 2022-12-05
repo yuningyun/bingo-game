@@ -22,6 +22,7 @@ void error_handling(char* mse);
 void game_Print(int anything);      // 게임 print
 void Make_Bingo();                  // 빙고판 만들기
 int Bingo_Check(int board[][BOARD_SIZE]);   // 빙고 개수 체크
+void bingo_print(int any); 			// 빙고판만 print
 
 // 서버 IP 학교 IP주소 입력 // 220.149.128.100 or 220.149.128.103
 char *SERVERIP = (char *)"220.149.128.100";
@@ -153,6 +154,10 @@ void* send_msg(void* arg) {
 			printf("[Debug]writed\n");
 			
 			
+		}
+		if(!strcmp(msg, "p\n")||!strcmp(msg, "P\n")) // P가 입력되었을 때 빙고판 확인하게 해준다.
+		{
+			bingo_print(0);
 		}
 		if(!strcmp(msg, "m\n")||!strcmp(msg, "M\n")) // M이 입력되었을 때 빙고판을 새로 만든다.
 		{
@@ -353,7 +358,43 @@ void game_print(int any)
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");
-	printf("M to makeBingo, C to chat,R to Ready,N to Number, Q to quit\n");
+	printf("M to makeBingo,P to check_Board , C to chat,R to Ready,N to Number, Q to quit\n");
+}
+
+void bingo_print(int any)
+{
+	int i, j, x;
+	printf("%c[1;33m", 27); 
+
+	printf("@----- client bingo -----@\n");
+	printf("turn: %3d bingo: %3d\n", B_MyGame.game_turn, B_MyGame.my_bingo);
+	printf("*-----*-----*-----*-----*-----*\n");
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			/*
+			if (B_MyGame.board[i][j] == 0)
+			{
+				printf("| ");
+				printf("%c[1;31m", 27);
+				printf("%2c ", 88);
+				printf("%c[1;33m", 27);
+			}
+			else
+				printf("| %2d ", B_MyGame.board[i][j]);
+			*/
+			if(B_MyGame.bingo[i][j]==1){
+				printf("|\033[1;31m %2d \033[1;33m", B_MyGame.board[i][j]);
+			}
+			else
+				printf("| %2d ", B_MyGame.board[i][j]);
+		}
+		printf("|\n");
+		printf("*-----*-----*-----*-----*-----*\n");
+	}
+	
+	printf("%c[0m", 27);
 }
 
 // 빙고 개수가 몇개인지 체크하는 함수
@@ -389,21 +430,24 @@ int bingo_check(int board[][BOARD_SIZE])
 // 원하는 보드판이 나올 때까지 보드판을 변경할 수 있도록한다.
 void Make_Bingo()
 {
-    int temp;
     int check_number[BOARD_SIZE*BOARD_SIZE] = { 0 };
     for (int i = 0; i < BOARD_SIZE; i++)
     {
         for (int j = 0; j < BOARD_SIZE; j++)
         {
             while(1)
-            temp = rand() % 25;
+			{
+				int temp = rand() % 25;
 
-            if (check_number[temp] == 0)
-            {
-                check_number[temp] = 1;
-                B_MyGame.board[i][j] = temp + 1;
-                break;
-            }
+				if (check_number[temp] == 0)
+				{
+					check_number[temp] = 1;
+					B_MyGame.board[i][j] = temp + 1;
+					break;
+				}
+				}
+            
+			
         }
     }
 }

@@ -55,25 +55,10 @@ int main(int argc, char* argv[])
 	pthread_t snd_thread, rcv_thread, gam_thread;
 	void* thread_return;
 
-	srand(time(NULL)); 
-	int check_number[BOARD_SIZE * BOARD_SIZE] = { 0 }; 
-	for (int i = 0; i < BOARD_SIZE; i++)
-	{
-		for (int j = 0; j < BOARD_SIZE; j++)
-		{
-			while (1)
-			{
-				int temp = rand() % 25; 
+	srand(time(NULL));
 
-				if (check_number[temp] == 0) 
-				{
-					check_number[temp] = 1;
-					B_MyGame.board[i][j] = temp + 1;
-					break;
-				}
-			}
-		}
-	}
+	// 처음 세팅으로 빙고판 만들기 
+	Make_Bingo(); // 맨처음 빙고판 만들기
 
 
 
@@ -168,6 +153,10 @@ void* send_msg(void* arg) {
 			printf("[Debug]writed\n");
 			
 			
+		}
+		if(!strcmp(msg, "m\n")||!strcmp(msg, "M\n")) // M이 입력되었을 때 빙고판을 새로 만든다.
+		{
+			Make_Bingo();
 		}
 		if(B_MyGame.my_turn==1&&!strcmp(msg,"N\n")) //내턴일때 N을 입력하면 숫자를 입력받는다.
 		{
@@ -364,7 +353,7 @@ void game_print(int any)
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");
-	printf("C to chat,R to Ready,N to Number Q to quit\n");
+	printf("M to makeBingo, C to chat,R to Ready,N to Number, Q to quit\n");
 }
 
 // 빙고 개수가 몇개인지 체크하는 함수

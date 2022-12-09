@@ -41,7 +41,6 @@ struct Game{
 };
 struct Game B_MyGame ={0,};
 
-
 //채팅관련 구조체로 묶을변수
 
 char msgQ[5][NAME_SIZE+BUFSIZE];
@@ -160,7 +159,8 @@ void* send_msg(void* arg) {
 		}
 		if(!strcmp(msg, "m\n")||!strcmp(msg, "M\n")) // M이 입력되었을 때 빙고판을 새로 만든다.
 		{
-			Make_Bingo();
+			if(B_MyGame.Game_on == 0) // 게임이 시작되기 전에 변경가능
+				Make_Bingo();
 			write(sock, "M", 2);
 		}
 		if(B_MyGame.my_turn==1&&!strcmp(msg,"N\n")) //내턴일때 N을 입력하면 숫자를 입력받는다.

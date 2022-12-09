@@ -367,7 +367,7 @@ void game_Print(int any)
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");
-	printf("M to makeBingo, P to check_Board , C to chat,R to Ready,N to Number, Q to quit\n");
+	printf("M to makeBingo, P to check_Board, C to chat, R to Ready, N to Number, Q to quit\n");
 }
 
 void bingo_print(int any)

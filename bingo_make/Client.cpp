@@ -163,7 +163,7 @@ void* send_msg(void* arg) {
 				Make_Bingo();
 			write(sock, "M", 2);
 		}
-		if(B_MyGame.my_turn==1&&!strcmp(msg,"N\n")) //내턴일때 N을 입력하면 숫자를 입력받는다.
+		if(B_MyGame.my_turn==1&&(!strcmp(msg,"N\n")||!strcmp(msg,"n\n"))) //내턴일때 N을 입력하면 숫자를 입력받는다.
 		{
 			while(1) {
 				printf("NUM:");
@@ -172,12 +172,20 @@ void* send_msg(void* arg) {
 				if(atoi(msg)==0) {
 					continue;
 				} else {
-					msg[strlen(msg)-1]=10;//개행문자
-					sprintf(chat,"%1s%10s%2s","N",name,msg);
-					write(sock, chat, strlen(chat));
-					B_MyGame.my_turn--;
+					if(atoi(msg)>0 && atoi(msg) <26)
+					{
+						msg[strlen(msg)-1]=10;//개행문자
+						sprintf(chat,"%1s%10s%2s","N",name,msg);
+						write(sock, chat, strlen(chat));
+						B_MyGame.my_turn--;
+						
+						break;
+					}
+					else {
+						printf("숫자를 다시 입력하세요.(1-25)");
+						continue;
+					}
 				}
-				break;
 			}
 			printf("[Debug]writed\n");
 		}

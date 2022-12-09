@@ -58,10 +58,8 @@ int main(int argc, char* argv[])
 
 	srand(time(NULL));
 
-	// 처음 세팅으로 빙고판 만들기 
+	// 처음 세팅으로 빙고판 만들기
 	Make_Bingo(); // 맨처음 빙고판 만들기
-
-
 
 	// 인수가 1개 들어왔을 때 error
 	if(argc == 1) {
@@ -157,11 +155,13 @@ void* send_msg(void* arg) {
 		}
 		if(!strcmp(msg, "p\n")||!strcmp(msg, "P\n")) // P가 입력되었을 때 빙고판 확인하게 해준다.
 		{
-			bingo_print(0);
+			write(sock, "P", 2);
+			printf("bingo print\n");
 		}
 		if(!strcmp(msg, "m\n")||!strcmp(msg, "M\n")) // M이 입력되었을 때 빙고판을 새로 만든다.
 		{
 			Make_Bingo();
+			write(sock, "M", 2);
 		}
 		if(B_MyGame.my_turn==1&&!strcmp(msg,"N\n")) //내턴일때 N을 입력하면 숫자를 입력받는다.
 		{
@@ -264,7 +264,7 @@ void* recv_msg(void* arg) {
 				{
 				FLAG[i]='\0';
 				}
-				B_MyGame.my_bingo=bingo_check(B_MyGame.bingo);
+				B_MyGame.my_bingo = Bingo_Check(B_MyGame.bingo);
 				//리시브가 모두 끝나고 난 뒤에, 승리플래그를 보낼지 검증해야한다.
 				if(B_MyGame.my_bingo==3)
 				{
@@ -278,11 +278,18 @@ void* recv_msg(void* arg) {
 					printf("[Debug]writed\n");
 				}
 			}
+
+			if(msg[0]==80) // P로 시작하는 제어문이 오면
+			{
+				bingo_print(0);
+			}
+
 			for(int i=0; i<BUFSIZE;i++){
 				msg[i]='\0';
 			}
+
 			//UI표시부
-			game_print(0);
+			game_Print(0);
 			
 						
 		}
@@ -303,7 +310,7 @@ void error_handling(char* msg)
 }
 
 // game print 게임 내용 출력
-void game_print(int any)
+void game_Print(int any)
 {
 	if(B_MyGame.Game_on==1){
 	int i, j, x;
@@ -358,37 +365,21 @@ void game_print(int any)
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");
-	printf("M to makeBingo,P to check_Board , C to chat,R to Ready,N to Number, Q to quit\n");
+	printf("M to makeBingo, P to check_Board , C to chat,R to Ready,N to Number, Q to quit\n");
 }
 
 void bingo_print(int any)
 {
-	int i, j, x;
+	int i, j;
 	printf("%c[1;33m", 27); 
 
-	printf("@----- client bingo -----@\n");
-	printf("turn: %3d bingo: %3d\n", B_MyGame.game_turn, B_MyGame.my_bingo);
+	printf("@----- My bingo board -----@\n");
 	printf("*-----*-----*-----*-----*-----*\n");
 	for (i = 0; i < BOARD_SIZE; i++)
 	{
 		for (j = 0; j < BOARD_SIZE; j++)
 		{
-			/*
-			if (B_MyGame.board[i][j] == 0)
-			{
-				printf("| ");
-				printf("%c[1;31m", 27);
-				printf("%2c ", 88);
-				printf("%c[1;33m", 27);
-			}
-			else
-				printf("| %2d ", B_MyGame.board[i][j]);
-			*/
-			if(B_MyGame.bingo[i][j]==1){
-				printf("|\033[1;31m %2d \033[1;33m", B_MyGame.board[i][j]);
-			}
-			else
-				printf("| %2d ", B_MyGame.board[i][j]);
+			printf("| %2d ", B_MyGame.board[i][j]);
 		}
 		printf("|\n");
 		printf("*-----*-----*-----*-----*-----*\n");
@@ -400,7 +391,7 @@ void bingo_print(int any)
 // 빙고 개수가 몇개인지 체크하는 함수
 //빙고 체크 함수, 매개변수로 넘어온 배열(빙고판)의
 //체크된 것을 모두 확인해서 빙고수를 반환한다.
-int bingo_check(int board[][BOARD_SIZE])
+int Bingo_Check(int board[][BOARD_SIZE])
 {
 	int i;
 	int count=0;
@@ -445,9 +436,7 @@ void Make_Bingo()
 					B_MyGame.board[i][j] = temp + 1;
 					break;
 				}
-				}
-            
-			
+			}        
         }
     }
 }

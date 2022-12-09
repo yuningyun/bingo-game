@@ -38,13 +38,14 @@ struct Clnt{
 	int R;//0은 준비중 1은 준비완료 2는 게임중 3은 게임중+
 	int Bingo;//
 };
-
 struct Clnt C[MAX_CLNT]; //what a massive
 char msgQ[5][NAME_SIZE+BUF_SIZE+1]; //SND쓰레드와 RCV쓰레드가 함께 사용하므로 전역변수
 pthread_mutex_t mutx;
 pthread_t t_id;
 pthread_t t_id2;
 pthread_t t_id3;
+
+int SERVERPORT = 4018; // 서버에서 열 포트
 
 int main(int argc, char* argv[])
 {
@@ -53,16 +54,19 @@ int main(int argc, char* argv[])
 	int clnt_adr_sz;
 	char name[NAME_SIZE]="[DEFAULT]";
 	pthread_t t_id;
-	if (argc != 2) {
-		printf("insert port.");
+
+	// 포트가 입력되었다면 입력된 포트를 열기위해 포트 저장
+	if (argc == 2) {
+		SERVERPORT = atoi(argv[1]);
 	}
+
 	pthread_mutex_init(&mutx, NULL);
 	serv_sock = socket(PF_INET, SOCK_STREAM, 0);
 
 	memset(&serv_adr, 0, sizeof(serv_adr)); 
 	serv_adr.sin_family = AF_INET; 
 	serv_adr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	serv_adr.sin_port = htons(atoi(argv[1])); 
+	serv_adr.sin_port = htons(SERVERPORT); 
 
 	if (bind(serv_sock, (struct sockaddr*)&serv_adr, sizeof(serv_adr)) == 1) {
 		error_handling("bind() error");

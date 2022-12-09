@@ -78,4 +78,12 @@ Client에서 사용하는 함수
 
 Server에서
 1. 포트 4018 연다. argv 2개면 입력된 포트로 연다.
-2. 
+2. 서버에서 가지고 있는 정보
+    --> 클리아언트 현황 clnt ip, port, name, ready, bingo
+    R로 클라이언트의 상황을 파악한다. 
+    0 == WAIT, 1 == READY, 2 == INGAME, 3 == TURN
+3. 채팅현황
+    msgQ[]에 채팅 내역을 저장하고 있다.
+4. 게임현황
+    win_check, clnt_cnt*clnt_cnt    누가 이기고 있는지 체크
+5. 

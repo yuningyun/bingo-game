@@ -334,6 +334,8 @@ void game_Print(int any)
 			else
 				printf("| %2d ", B_MyGame.board[i][j]);
 			*/
+
+			// 나왔었던 번호는 red로 출력, 나머진 orange로 출력
 			if(B_MyGame.bingo[i][j]==1){
 				printf("|\033[1;31m %2d \033[1;33m", B_MyGame.board[i][j]);
 			}
@@ -371,7 +373,7 @@ void game_Print(int any)
 void bingo_print(int any)
 {
 	int i, j;
-	printf("%c[1;33m", 27); 
+	printf("%c[1;30m", 27);  // 검은 색으로 출력
 
 	printf("@----- My bingo board -----@\n");
 	printf("*-----*-----*-----*-----*-----*\n");

@@ -362,7 +362,7 @@ void game_Print(int any)
 	else if(B_MyGame.Win_flag==2){printf("DRAW!!\n");} // Win_flag 2일때 무승부
 	else if(B_MyGame.Win_flag==1){printf("LOSE\n");} // Win_flag 1일때 패배
 	else if(B_MyGame.Win_flag==-1){printf("ERR\n");} // Win_flag -1일때 에러
-	else if(B_MyGame.my_turn==1){printf("its your turn\n");} // 내차례
+	else if(B_MyGame.my_turn==1){printf("its My turn\n");} // 내차례
 	else {printf("\n");}
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력

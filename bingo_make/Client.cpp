@@ -25,7 +25,7 @@ int Bingo_Check(int board[][BOARD_SIZE]);   // 빙고 개수 체크
 void bingo_print(int any); 			// 빙고판만 print
 
 // 서버 IP 학교 IP주소 입력 // 220.149.128.100 or 220.149.128.103
-char *SERVERIP = (char *)"220.149.128.100";
+char *SERVERIP = (char *)"220.149.128.103";
 int SERVERPORT = 4018; // 기본 포트 번호
 
 //게임관련 구조체로 묶을 변수

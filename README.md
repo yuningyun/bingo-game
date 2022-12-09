@@ -23,7 +23,6 @@ Server, Client 빙고 게임 만들기
 7. 서버가 열려있지 않을 시 connect err를 출력하며 종료됨
 8. 서버에 2명이 접속했을 때 둘다 ready가 되면 게임 start
 9. 서버에 3명이 접속했을 때 3명 다 ready가 되면 게임 start
-10. 
 
 
 Client에서 Server로 메세지 보낼 때
@@ -77,3 +76,6 @@ Client에서 사용하는 함수
     --> 새로운 빙고판을 만든다.<br/>
         실행하게 되면 board가 변경된다.
 
+Server에서
+1. 포트 4018 연다. argv 2개면 입력된 포트로 연다.
+2. 

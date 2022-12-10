@@ -13,6 +13,8 @@
 #define NAME_SIZE 10        // 사용자 이름 사이즈
 #define BUFSIZE 100        // 버퍼 사이즈
 
+#define T_SIZE 9			// 틱택토 크기
+
 void* send_msg(void* arg);
 void* recv_msg(void* arg);
 void* game_set(void* arg);
@@ -24,24 +26,30 @@ void Make_Bingo();                  // 빙고판 만들기
 int Bingo_Check(int board[][BOARD_SIZE]);   // 빙고 개수 체크
 void bingo_print(int any); 			// 빙고판만 print
 
+char Tic_Check();			// 틱택토 체크
+void Tic_Put(char myChar);	// 틱택토 말 놓기
+void Tic_Print();			// 틱택토 프린트
+
 // 서버 IP 학교 IP주소 입력 // 220.149.128.100 or 220.149.128.103
 char *SERVERIP = (char *)"220.149.128.103";
 int SERVERPORT = 4018; // 기본 포트 번호
 
 //게임관련 구조체로 묶을 변수
 struct Game{
-    int Game_on;
-    int game_turn;
-    int my_turn;
-    int my_bingo; 
+    int Game_on;		// game on = 0 -> 진행 X, 1 -> 빙고, 2-> 틱택토
+    int game_turn;		// 틱택토 round, 빙고 게임 turn
+    int my_turn;		// 내 차례 표시
+    int my_bingo;
     int Win_flag; //Wflag: 0진행 1패배 2무승부 3승리
     int board[BOARD_SIZE][BOARD_SIZE];
     int bingo[BOARD_SIZE][BOARD_SIZE];
 
+	int imFirst = 0;		// 선공 = 1, 후공 = 0
+	char T_board[9] = {'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'}; // 틱택토 보드
 };
 struct Game B_MyGame ={0,};
 
-//채팅관련 구조체로 묶을변수
+//채팅관련 구조체로 묶을변토
 
 char msgQ[5][NAME_SIZE+BUFSIZE];
 
@@ -155,7 +163,6 @@ void* send_msg(void* arg) {
 		if(!strcmp(msg, "p\n")||!strcmp(msg, "P\n")) // P가 입력되었을 때 빙고판 확인하게 해준다.
 		{
 			write(sock, "P", 2);
-			printf("bingo print\n");
 		}
 		if(!strcmp(msg, "m\n")||!strcmp(msg, "M\n")) // M이 입력되었을 때 빙고판을 새로 만든다.
 		{
@@ -225,6 +232,8 @@ void* recv_msg(void* arg) {
 			system("clear");
 
 			if(strcmp(msg,"GAMEON")==0) B_MyGame.Game_on=1;
+			if(strcmp(msg,"TicGameOn") == 0) B_MyGame.Game_on=2;
+
 			if(msg[0]==87)//W로 시작하는 제어문이 오면 Wflag: 0진행 1패배 2무승부 3승리
 			{
 				if(strcmp(tmpName, name)==0){
@@ -362,6 +371,9 @@ void game_Print(int any)
 		printf("bingo count: %d\n", 1);
 	}*/
 	}
+	else if(B_MyGame.Game_on == 2) {
+		Tic_Print();
+	}
 	else{
 		printf("\n\n\n\n\n\n\n\n\n\n\n\n\n");
 	}
@@ -449,4 +461,77 @@ void Make_Bingo()
 			}        
         }
     }
+}
+
+void Tic_Print() {
+	printf("| %c | %c | %c\n", B_MyGame.T_board[0], B_MyGame.T_board[1], B_MyGame.T_board[2]);
+	printf("| %c | %c | %c\n", B_MyGame.T_board[4], B_MyGame.T_board[5], B_MyGame.T_board[6]);
+	printf("| %c | %c | %c\n", B_MyGame.T_board[7], B_MyGame.T_board[8], B_MyGame.T_board[9]);
+}
+
+void Tic_Put(char myChar) {
+	int put = 0;
+	while(1) {
+		// 놓을 곳 입력
+		printf("put : ");
+		scanf("%d", &put);
+		getchar();
+		if(put == 9) {
+			memset(B_MyGame.T_board, 0x0, T_SIZE);
+			strcpy(B_MyGame.T_board, "endgame");
+			break;
+		}
+		else if(B_MyGame.T_board[put] == 'e') {
+			B_MyGame.T_board[put] = myChar;
+			break;
+		}
+		else {
+			printf("can't put %d\n", put);
+			continue;
+		}
+	}
+}
+
+char Tic_Check() {
+	int cnt = 0;
+	if(strncmp(B_MyGame.T_board,"endgame", 7) == 0) {
+		return 's';
+	}
+	else {
+		for (int i = 0; i < T_SIZE; i++) {
+			if(B_MyGame.T_board[i] == 'e')
+				cnt++;
+		}
+		if((B_MyGame.T_board[0] == B_MyGame.T_board[1])&&(B_MyGame.T_board[1] == B_MyGame.T_board[2])&&(B_MyGame.T_board[0] != 'e')) {
+			return B_MyGame.T_board[0];
+		}
+		else if((B_MyGame.T_board[3] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[5])&&(B_MyGame.T_board[3] != 'e')) {
+			return B_MyGame.T_board[3]; 
+		}
+		else if((B_MyGame.T_board[6] == B_MyGame.T_board[7])&&(B_MyGame.T_board[7] == B_MyGame.T_board[8])&&(B_MyGame.T_board[6] != 'e')) {
+			return B_MyGame.T_board[6]; 
+		}
+		else if((B_MyGame.T_board[0] == B_MyGame.T_board[3])&&(B_MyGame.T_board[3] == B_MyGame.T_board[6])&&(B_MyGame.T_board[0] != 'e')) {
+			return B_MyGame.T_board[0]; 
+		}
+		else if((B_MyGame.T_board[1] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[7])&&(B_MyGame.T_board[1] != 'e')) {
+			return B_MyGame.T_board[1]; 
+		}
+		else if((B_MyGame.T_board[2] == B_MyGame.T_board[5])&&(B_MyGame.T_board[5] == B_MyGame.T_board[8])&&(B_MyGame.T_board[2] != 'e')) {
+			return B_MyGame.T_board[2]; 
+		}
+		else if((B_MyGame.T_board[0] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[8])&&(B_MyGame.T_board[0] != 'e')) {
+			return B_MyGame.T_board[0]; 
+		}
+		else if((B_MyGame.T_board[2] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[6])&&(B_MyGame.T_board[2] != 'e')) {
+			return B_MyGame.T_board[2]; 
+		}
+		else if(cnt==0) {
+			return 'd'; 
+		}
+		else {
+			return 'e';
+		}
+	}
+
 }

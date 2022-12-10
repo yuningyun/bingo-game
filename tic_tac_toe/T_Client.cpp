@@ -26,12 +26,12 @@ void Make_Bingo();                  // 빙고판 만들기
 int Bingo_Check(int board[][BOARD_SIZE]);   // 빙고 개수 체크
 void bingo_print(int any); 			// 빙고판만 print
 
+//int Tic_Check(char* meChar);			// 틱택토 체크
 char Tic_Check();			// 틱택토 체크
-void Tic_Put(char myChar);	// 틱택토 말 놓기
 void Tic_Print();			// 틱택토 프린트
 
 // 서버 IP 학교 IP주소 입력 // 220.149.128.100 or 220.149.128.103
-char *SERVERIP = (char *)"220.149.128.103";
+char *SERVERIP = (char *)"220.149.128.100";
 int SERVERPORT = 4018; // 기본 포트 번호
 
 //게임관련 구조체로 묶을 변수
@@ -44,7 +44,8 @@ struct Game{
     int board[BOARD_SIZE][BOARD_SIZE];
     int bingo[BOARD_SIZE][BOARD_SIZE];
 
-	int imFirst = 0;		// 선공 = 1, 후공 = 0
+	char T_chack;
+	char myChar;
 	char T_board[9] = {'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e', 'e'}; // 틱택토 보드
 };
 struct Game B_MyGame ={0,};
@@ -170,6 +171,11 @@ void* send_msg(void* arg) {
 				Make_Bingo();
 			write(sock, "M", 2);
 		}
+		if(!strcmp(msg, "i\n")||!strcmp(msg, "I\n")) // T가 입력되었을 때 빙고판 확인하게 해준다.
+		{
+			sprintf(chat,"%1s%10s","I",name);
+			write(sock, chat, strlen(chat));
+		}
 		if(B_MyGame.my_turn==1&&(!strcmp(msg,"N\n")||!strcmp(msg,"n\n"))) //내턴일때 N을 입력하면 숫자를 입력받는다.
 		{
 			while(1) {
@@ -205,6 +211,31 @@ void* send_msg(void* arg) {
 			sprintf(chat,"%1s%10s","R",name);
 			write(sock, chat, strlen(chat));
 			printf("[Debug]writed\n");
+		}
+		if(B_MyGame.my_turn==1&&(!strcmp(msg,"A\n")||!strcmp(msg,"a\n")))
+		{
+			while(1){
+				printf("Point: ");
+				fgets(msg, BUFSIZE, stdin);
+
+				if(atoi(msg)==0){
+					continue;
+				} else {
+					if(atoi(msg)>=0 && atoi(msg) < 9)
+					{
+						msg[strlen(msg)-1]=10;//개행문자
+						sprintf(chat,"%1s%10s%2s","A",name,msg);
+						write(sock, chat, strlen(chat));
+						B_MyGame.my_turn--;
+						
+						break;
+					}
+					else {
+						printf("숫자를 다시 입력하세요.(0-8)");
+						continue;
+					}
+				}
+			}
 		}
 		
 	}
@@ -257,7 +288,13 @@ void* recv_msg(void* arg) {
 			}
 			if(msg[0]==84)//T로 시작하는 제어문이 오면
 			{
-				if(strcmp(tmpName, name)==0) B_MyGame.my_turn++;
+				printf("T in\n");
+				printf("%10s\n", tmpName);
+				if(strcmp(tmpName, name)==0) 
+				{
+					B_MyGame.my_turn++;
+					printf("T run\n");
+				}
 			}
 			if(msg[0]==78)//N로 시작하는 제어문이 오면
 			{
@@ -296,6 +333,53 @@ void* recv_msg(void* arg) {
 				}
 			}
 
+			if(msg[0]==65) { // A로 시작하는 제어문이 오면
+				int NUM=0;
+				printf("서버입력받아 변환할 값 %d %d",tmpMsg[0],tmpMsg[1]);
+				if(tmpMsg[1]==10){NUM=tmpMsg[0]-48;}
+				else{NUM=(10*(tmpMsg[0]-48))+tmpMsg[1]-48;}
+				//printf("받아서 변환된숫자: %d\n",NUM);
+
+				if(strcmp(tmpName, (char*)'O') == 0) {
+					B_MyGame.T_board[NUM] = 'O';
+				} else if(strcmp(tmpName, (char*)'X') == 0) {
+					B_MyGame.T_board[NUM] = 'X';
+				}
+
+				for(int i=0; i<BUFSIZE;i++)
+				{
+				FLAG[i]='\0';
+				}
+
+				B_MyGame.T_chack = Tic_Check();
+				//리시브가 모두 끝나고 난 뒤에, 승리플래그를 보낼지 검증해야한다.
+				if(B_MyGame.T_chack == 's') { // 내가 항복한경우
+					sprintf(FLAG,"%1s%10s%s","W",name,"0");
+					int k= write(sock, FLAG, strlen(FLAG));
+					if(k!=-1) {printf("[Debug]writed\n");}
+				} else if(B_MyGame.T_chack == B_MyGame.myChar) {
+					sprintf(FLAG,"%1s%10s%s","W",name,"1");
+					int k= write(sock, FLAG, strlen(FLAG));
+					if(k!=-1) {printf("[Debug] win writed\n");}
+				} else if(B_MyGame.T_chack == 'd') {
+					sprintf(FLAG,"%1s%10s%s","W",name,"1");
+					int k= write(sock, FLAG, strlen(FLAG));
+					if(k!=-1) {printf("[Debug][bingo3]writed\n");}
+				} else {
+					sprintf(FLAG,"%1s%10s%s","W",name,"0");
+					int k= write(sock, FLAG, strlen(FLAG));
+					if(k!=-1) {printf("[Debug]lose writed\n");}
+				}
+			}
+
+			if(msg[0]==66) // B로 시작하는 제어문이 오면
+			{
+				if(strcmp(tmpName, name)==0) 
+				{
+					B_MyGame.myChar = tmpMsg[0];
+				}
+			}
+
 			if(msg[0]==80) // P로 시작하는 제어문이 오면
 			{
 				bingo_print(0);
@@ -308,7 +392,6 @@ void* recv_msg(void* arg) {
 			//UI표시부
 			game_Print(0);
 			
-						
 		}
 	}
 	return NULL;
@@ -384,10 +467,11 @@ void game_Print(int any)
 	else if(B_MyGame.Win_flag==-1){printf("ERR\n");} // Win_flag -1일때 에러
 	else if(B_MyGame.my_turn==1){printf("its My turn\n");} // 내차례
 	else {printf("\n");}
+	printf("%d", B_MyGame.my_turn);
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");
-	printf("M to makeBingo, P to check_Board, C to chat, R to Ready, N to Number, Q to quit\n");
+	printf("M to makeBingo, P to check_Board, C to chat, R to Ready, N to Number, A to TicTacToe num input, Q to quit\n");
 }
 
 void bingo_print(int any)
@@ -465,31 +549,8 @@ void Make_Bingo()
 
 void Tic_Print() {
 	printf("| %c | %c | %c\n", B_MyGame.T_board[0], B_MyGame.T_board[1], B_MyGame.T_board[2]);
-	printf("| %c | %c | %c\n", B_MyGame.T_board[4], B_MyGame.T_board[5], B_MyGame.T_board[6]);
-	printf("| %c | %c | %c\n", B_MyGame.T_board[7], B_MyGame.T_board[8], B_MyGame.T_board[9]);
-}
-
-void Tic_Put(char myChar) {
-	int put = 0;
-	while(1) {
-		// 놓을 곳 입력
-		printf("put : ");
-		scanf("%d", &put);
-		getchar();
-		if(put == 9) {
-			memset(B_MyGame.T_board, 0x0, T_SIZE);
-			strcpy(B_MyGame.T_board, "endgame");
-			break;
-		}
-		else if(B_MyGame.T_board[put] == 'e') {
-			B_MyGame.T_board[put] = myChar;
-			break;
-		}
-		else {
-			printf("can't put %d\n", put);
-			continue;
-		}
-	}
+	printf("| %c | %c | %c\n", B_MyGame.T_board[3], B_MyGame.T_board[4], B_MyGame.T_board[5]);
+	printf("| %c | %c | %c\n", B_MyGame.T_board[6], B_MyGame.T_board[7], B_MyGame.T_board[8]);
 }
 
 char Tic_Check() {
@@ -535,3 +596,49 @@ char Tic_Check() {
 	}
 
 }
+
+/*
+int Tic_Check(char* meChar) {
+	int cnt = 0;
+	if(strncmp(B_MyGame.T_board,"endgame", 7) == 0) {
+		return 3;
+	}
+	else {
+		for (int i = 0; i < T_SIZE; i++) {
+			if(B_MyGame.T_board[i] == 'e')
+				cnt++;
+		}
+		if((strcmp((char*)B_MyGame.T_board[0], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[1], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[2], meChar) == 0)) {
+			return 1;
+		}
+		else if((strcmp((char*)B_MyGame.T_board[3], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[4], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[5], meChar) == 0)) {
+			return 1; 
+		}
+		else if((strcmp((char*)B_MyGame.T_board[6], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[7], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[8], meChar) == 0)) {
+			return 1; 
+		}
+		else if((strcmp((char*)B_MyGame.T_board[0], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[3], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[6], meChar) == 0)) {
+			return 1; 
+		}
+		else if((strcmp((char*)B_MyGame.T_board[1], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[4], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[7], meChar) == 0)) {
+			return 1; 
+		}
+		else if((strcmp((char*)B_MyGame.T_board[2], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[5], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[8], meChar) == 0)) {
+			return 1; 
+		}
+		else if((strcmp((char*)B_MyGame.T_board[0], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[4], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[8], meChar) == 0)) {
+			return 1; 
+		}
+		else if((strcmp((char*)B_MyGame.T_board[2], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[4], meChar) == 0)&&(strcmp((char*)B_MyGame.T_board[6], meChar) == 0)) {
+			return 1; 
+		}
+		else if(cnt==0) {
+			return 2; 
+		}
+		else {
+			return 0;
+		}
+	}
+
+}
+*/

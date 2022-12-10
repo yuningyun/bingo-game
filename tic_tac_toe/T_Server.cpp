@@ -39,6 +39,8 @@ struct Clnt{
 	char NAME[10];//동적할당으로 수정전에 NAME_SIZE를 10으로 임의 
 	int R;//0은 준비중 1은 준비완료 2는 게임중 3은 게임중+
 	int Bingo;//
+
+	int T_Char;
 };
 
 struct Clnt C[MAX_CLNT]; //what a massive
@@ -47,6 +49,8 @@ pthread_mutex_t mutx;
 pthread_t t_id;
 pthread_t t_id2;
 pthread_t t_id3;
+
+int OX_flag;
 
 int SERVERPORT = 4018; // 서버에서 열 포트
 
@@ -222,6 +226,18 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 				}
 			}
 
+			if(msg[0] == 73) // I로 시작하는 제어문 왔을 때
+			{
+				char tmp[1+NAME_SIZE+BUFSIZE];
+				for(int i=0; i<clnt_cnt;i++){
+					if(strcmp(C[i].NAME,tmpName)==0 && C[i].R == 3){
+						sprintf(tmp,"%1s%10s","T",C[0].NAME);
+						send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
+					}
+					//printf("C[i].NAME:%s tmp2:%s tmp:%s\n",C[i].NAME,tmp2,tmp);
+				}
+			}
+
 			// P로 시작하는 숫자내역이 오면
 			if(msg[0]== 80)
 			{
@@ -233,6 +249,45 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 			{
 				send_msg("",1,2);
 			}
+			// 틱택토 자리 입력은 A로 제어
+			if(msg[0] == 65)
+			{
+				
+				for(int i=0; i<clnt_cnt;i++)
+				{
+					if(strcmp(C[i].NAME,tmpName)==0)
+					{
+						C[i].R=2;
+						char tmp[1+NAME_SIZE+BUFSIZE];
+						if(i==clnt_cnt-1){
+							C[0].R=3;
+							OX_flag = 0;
+							sprintf(tmp,"%1s%10s","T",C[0].NAME);
+							send_msg(tmp,1+NAME_SIZE+BUFSIZE,5);
+						}
+						else{
+							C[i+1].R=3;
+							OX_flag = 1;
+							sprintf(tmp,"%1s%10s","T",C[i+1].NAME);
+							send_msg(tmp,1+NAME_SIZE+BUFSIZE,5);		
+						}
+					}
+				}
+				for(int i=0; i<clnt_cnt;i++)
+				{
+					if(OX_flag == 0) {
+						char tmp2[1+NAME_SIZE+BUFSIZE];
+						sprintf(tmp2,"%1s%10s%2s","A","O",tmpMsg);
+						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);		
+					} else if(OX_flag == 1) {
+						char tmp2[1+NAME_SIZE+BUFSIZE];
+						sprintf(tmp2,"%1s%10s%2s","A","X",tmpMsg);
+						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);	
+					}
+				}
+			}
+
+
 		///*
 		for(int i=0; i<1+NAME_SIZE+BUFSIZE;i++){
 			msg[i]='\0';
@@ -288,7 +343,7 @@ void* handle_game(void* arg){
 					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
 					pthread_mutex_unlock(&mutx);
 				}
-				else { // 접속 2명일 때 TicTacToe 시작
+				else if(sum == 2) { // 접속 2명일 때 TicTacToe 시작
 					//게임을 시작하는 동안에는 다른 연산을 멈추고 게임에 맞도록 변수를 설정한다.
 					pthread_mutex_init(&mutx, NULL);
 					send_msg("TicGameOn",1+BUFSIZE+NAME_SIZE,3);
@@ -297,10 +352,26 @@ void* handle_game(void* arg){
 					for(int i=0;i<clnt_cnt;i++)
 					{
 						C[i].R=2;
+						// 한번만 전송
+						for(int i=0; i<clnt_cnt; i++){
+							if(i == 0){
+								sprintf(tmp,"%1s%10s%s","B",C[i].NAME,"O");
+								send_msg(tmp,1+BUFSIZE+NAME_SIZE,7);
+							}
+							else{
+								sprintf(tmp,"%1s%10s%s","B",C[i].NAME,"X");
+								send_msg(tmp,1+BUFSIZE+NAME_SIZE,8);
+							}
+						}
 					}
+					
 					C[0].R=3;
 					sprintf(tmp,"%1s%10s","T",C[0].NAME);
 					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
+					sleep(2);
+					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
+					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
+
 					pthread_mutex_unlock(&mutx);
 				}
 			}
@@ -387,5 +458,5 @@ void send_msg(char* msg, int len, int index) {//index는 디버그용, 아무값
 	for (i = 0; i < clnt_cnt; i++)
 		write(clnt_socks[i], msg, len);
 	pthread_mutex_unlock(&mutx);
-	printf("[Debug] %d sendALL\n",index);
+	//printf("[Debug] %d sendALL\n",index);
 }

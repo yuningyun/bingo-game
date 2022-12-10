@@ -36,7 +36,7 @@ int SERVERPORT = 4018; // 기본 포트 번호
 
 //게임관련 구조체로 묶을 변수
 struct Game{
-    int Game_on;		// game on = 0 -> 진행 X, 1 -> 빙고, 2-> 틱택토
+    int Game_on;		// game on = 0 -> 진행 X, 1 -> 빙고, 3-> 틱택토
     int game_turn;		// 틱택토 round, 빙고 게임 turn
     int my_turn;		// 내 차례 표시
     int my_bingo;
@@ -263,7 +263,7 @@ void* recv_msg(void* arg) {
 			system("clear");
 
 			if(strcmp(msg,"GAMEON")==0) B_MyGame.Game_on=1;
-			if(strcmp(msg,"TicGameOn") == 0) B_MyGame.Game_on=2;
+			if(strcmp(msg,"TicGam") == 0) B_MyGame.Game_on=3;
 
 			if(msg[0]==87)//W로 시작하는 제어문이 오면 Wflag: 0진행 1패배 2무승부 3승리
 			{
@@ -290,10 +290,11 @@ void* recv_msg(void* arg) {
 			{
 				printf("T in\n");
 				printf("%10s\n", tmpName);
+				printf("%10s\n",name);
 				if(strcmp(tmpName, name)==0) 
 				{
+					printf("myTurn\n");
 					B_MyGame.my_turn++;
-					printf("T run\n");
 				}
 			}
 			if(msg[0]==78)//N로 시작하는 제어문이 오면
@@ -377,6 +378,7 @@ void* recv_msg(void* arg) {
 				if(strcmp(tmpName, name)==0) 
 				{
 					B_MyGame.myChar = tmpMsg[0];
+					printf("%c", B_MyGame.myChar);
 				}
 			}
 
@@ -454,7 +456,7 @@ void game_Print(int any)
 		printf("bingo count: %d\n", 1);
 	}*/
 	}
-	else if(B_MyGame.Game_on == 2) {
+	else if(B_MyGame.Game_on == 3) {
 		Tic_Print();
 	}
 	else{

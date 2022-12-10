@@ -346,31 +346,32 @@ void* handle_game(void* arg){
 				else if(sum == 2) { // 접속 2명일 때 TicTacToe 시작
 					//게임을 시작하는 동안에는 다른 연산을 멈추고 게임에 맞도록 변수를 설정한다.
 					pthread_mutex_init(&mutx, NULL);
-					send_msg("TicGameOn",1+BUFSIZE+NAME_SIZE,3);
+					send_msg("TicGam",1+BUFSIZE+NAME_SIZE,3);
 					sleep(1);
-					send_msg("TicGameOn",1+BUFSIZE+NAME_SIZE,3);//왜 인지 모르겠지만 가장 전송누락이 잦은 부분. 주의
+					send_msg("TicGam",1+BUFSIZE+NAME_SIZE,3);//왜 인지 모르겠지만 가장 전송누락이 잦은 부분. 주의
 					for(int i=0;i<clnt_cnt;i++)
 					{
 						C[i].R=2;
 						// 한번만 전송
 						for(int i=0; i<clnt_cnt; i++){
 							if(i == 0){
-								sprintf(tmp,"%1s%10s%s","B",C[i].NAME,"O");
-								send_msg(tmp,1+BUFSIZE+NAME_SIZE,7);
+								char tmp1[1+BUFSIZE+NAME_SIZE];
+								sprintf(tmp1,"%1s%10s%s","B",C[i].NAME,"O");
+								send_msg(tmp1,1+BUFSIZE+NAME_SIZE,7);
 							}
 							else{
-								sprintf(tmp,"%1s%10s%s","B",C[i].NAME,"X");
-								send_msg(tmp,1+BUFSIZE+NAME_SIZE,8);
+								char tmp1[1+BUFSIZE+NAME_SIZE];
+								sprintf(tmp1,"%1s%10s%s","B",C[i].NAME,"X");
+								send_msg(tmp1,1+BUFSIZE+NAME_SIZE,8);
 							}
 						}
 					}
-					
+					char tmp2[1+BUFSIZE+NAME_SIZE];
 					C[0].R=3;
-					sprintf(tmp,"%1s%10s","T",C[0].NAME);
-					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
-					sleep(2);
-					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
-					send_msg(tmp,1+BUFSIZE+NAME_SIZE,4);
+					sprintf(tmp2,"%1s%10s","T",C[0].NAME);
+					send_msg(tmp2,1+BUFSIZE+NAME_SIZE,4);
+					//send_msg(tmp2,1+BUFSIZE+NAME_SIZE,4);
+					//send_msg(tmp2,1+BUFSIZE+NAME_SIZE,4);
 
 					pthread_mutex_unlock(&mutx);
 				}

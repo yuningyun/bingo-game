@@ -253,7 +253,7 @@ void* recv_msg(void* arg) {
 	while (1)
 	{
 		if(str_len=read(sock, msg, 1+BUFSIZE+NAME_SIZE)!=0){
-			char tmpName[10]; //
+			char tmpName[10] = {'\0',}; //
 			for(int i=0,j=0;i<10;i++){
 				if(msg[i+1]!=32) {tmpName[j++]=msg[i+1];}
 			}
@@ -343,11 +343,12 @@ void* recv_msg(void* arg) {
 				//printf("받아서 변환된숫자: %d\n",NUM);
 
 				printf("num: %d\n", NUM);
-				printf("%10s", tmpName);
+				printf("%10s\n", tmpName);
+				printf("%s\n", msg);
 
-				if(strcmp(tmpName, "         O") == 0) {
+				if(strcmp(tmpName, "O") == 0) {
 					B_MyGame.T_board[NUM] = 'O';
-				} else if(strcmp(tmpName, "         X") == 0) {
+				} else if(strcmp(tmpName, "X") == 0) {
 					B_MyGame.T_board[NUM] = 'X';
 				}
 
@@ -361,19 +362,19 @@ void* recv_msg(void* arg) {
 				if(B_MyGame.T_chack == 's') { // 내가 항복한경우
 					sprintf(FLAG,"%1s%10s%s","W",name,"0");
 					write(sock, FLAG, strlen(FLAG));
-					printf("[Debug]writed\n");
+					//printf("[Debug]writed\n");
 				} else if(B_MyGame.T_chack == B_MyGame.myChar) {
 					sprintf(FLAG,"%1s%10s%s","W",name,"1");
 					int k= write(sock, FLAG, strlen(FLAG));
-					if(k!=-1) {printf("[Debug] win writed\n");}
+					//if(k!=-1) {printf("[Debug] win writed\n");}
 				} else if(B_MyGame.T_chack == 'd') {
 					sprintf(FLAG,"%1s%10s%s","W",name,"1");
 					int k= write(sock, FLAG, strlen(FLAG));
-					if(k!=-1) {printf("[Debug][bingo3]writed\n");}
+					//if(k!=-1) {printf("[Debug][bingo3]writed\n");}
 				} else {
 					sprintf(FLAG,"%1s%10s%s","W",name,"0");
 					write(sock, FLAG, strlen(FLAG));
-					printf("[Debug]writed\n");
+					//printf("[Debug]writed\n");
 				}
 			}
 

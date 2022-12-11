@@ -294,7 +294,7 @@ void* recv_msg(void* arg) {
 				//printf("%10s\n",name);     // 디버그 용
 				if(strcmp(tmpName, name)==0) 
 				{
-					printf("myTurn\n");
+					//printf("myTurn\n");
 					B_MyGame.my_turn++;
 				}
 			}

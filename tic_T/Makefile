@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -Wall
 LDLIBS = -lpthread
 
-PROGRAMS = T_Client
+PROGRAMS = Client
 
 all: $(PROGRAMS)
 

@@ -303,7 +303,7 @@ void* recv_msg(void* arg) {
 					//2자리문자열로 온 숫자를 아스키코드표에 따라 숫자로 변환
 					//printf("숫자[%d][%d]",tmpMsg[0],tmpMsg[1]);
 				int NUM=0;
-				printf("서버입력받아 변환할 값 %d %d",tmpMsg[0],tmpMsg[1]);
+				//printf("서버입력받아 변환할 값 %d %d",tmpMsg[0],tmpMsg[1]);
 				if(tmpMsg[1]==10){NUM=tmpMsg[0]-48;}			
 				else{NUM=(10*(tmpMsg[0]-48))+tmpMsg[1]-48;}
 				//printf("받아서 변환된숫자: %d\n",NUM);
@@ -342,9 +342,9 @@ void* recv_msg(void* arg) {
 				else{NUM=(10*(tmpMsg[0]-48))+tmpMsg[1]-48;}
 				//printf("받아서 변환된숫자: %d\n",NUM);
 
-				printf("num: %d\n", NUM);
-				printf("%10s\n", tmpName);
-				printf("%s\n", msg);
+				//printf("num: %d\n", NUM);
+				//printf("%10s\n", tmpName);
+				//printf("%s\n", msg);
 
 				if(strcmp(tmpName, "O") == 0) {
 					B_MyGame.T_board[NUM] = 'O';
@@ -474,9 +474,8 @@ void game_Print(int any)
 	else if(B_MyGame.Win_flag==-1){printf("ERR\n");} // Win_flag -1일때 에러
 	else if(B_MyGame.my_turn==1){printf("its My turn\n");} // 내차례
 	else {printf("\n");}
-	printf("%d\n", B_MyGame.my_turn);
-	printf("%c\n", B_MyGame.myChar);
-	printf("%d\n", B_MyGame.my_turn);
+	//printf("%d\n", B_MyGame.my_turn);
+	//printf("%c\n", B_MyGame.myChar);
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");

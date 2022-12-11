@@ -212,7 +212,8 @@ void* send_msg(void* arg) {
 			write(sock, chat, strlen(chat));
 			printf("[Debug]writed\n");
 		}
-		if(B_MyGame.my_turn==1&&(!strcmp(msg,"A\n")||!strcmp(msg,"a\n")))
+
+		if(B_MyGame.my_turn==1&&(!strcmp(msg,"A\n")||!strcmp(msg,"a\n"))) // 내 차례일때 A를 입력하면 말을 놓을 위치를 보낸다.
 		{
 			while(1){
 				printf("Point: ");
@@ -288,9 +289,9 @@ void* recv_msg(void* arg) {
 			}
 			if(msg[0]==84)//T로 시작하는 제어문이 오면
 			{
-				printf("T in\n");
-				printf("%10s\n", tmpName);
-				printf("%10s\n",name);
+				//printf("T in\n");
+				//printf("%10s\n", tmpName);
+				//printf("%10s\n",name);     // 디버그 용
 				if(strcmp(tmpName, name)==0) 
 				{
 					printf("myTurn\n");
@@ -341,9 +342,12 @@ void* recv_msg(void* arg) {
 				else{NUM=(10*(tmpMsg[0]-48))+tmpMsg[1]-48;}
 				//printf("받아서 변환된숫자: %d\n",NUM);
 
-				if(strcmp(tmpName, (char*)'O') == 0) {
+				printf("num: %d\n", NUM);
+				printf("%10s", tmpName);
+
+				if(strcmp(tmpName, "         O") == 0) {
 					B_MyGame.T_board[NUM] = 'O';
-				} else if(strcmp(tmpName, (char*)'X') == 0) {
+				} else if(strcmp(tmpName, "         X") == 0) {
 					B_MyGame.T_board[NUM] = 'X';
 				}
 
@@ -356,8 +360,8 @@ void* recv_msg(void* arg) {
 				//리시브가 모두 끝나고 난 뒤에, 승리플래그를 보낼지 검증해야한다.
 				if(B_MyGame.T_chack == 's') { // 내가 항복한경우
 					sprintf(FLAG,"%1s%10s%s","W",name,"0");
-					int k= write(sock, FLAG, strlen(FLAG));
-					if(k!=-1) {printf("[Debug]writed\n");}
+					write(sock, FLAG, strlen(FLAG));
+					printf("[Debug]writed\n");
 				} else if(B_MyGame.T_chack == B_MyGame.myChar) {
 					sprintf(FLAG,"%1s%10s%s","W",name,"1");
 					int k= write(sock, FLAG, strlen(FLAG));
@@ -368,8 +372,8 @@ void* recv_msg(void* arg) {
 					if(k!=-1) {printf("[Debug][bingo3]writed\n");}
 				} else {
 					sprintf(FLAG,"%1s%10s%s","W",name,"0");
-					int k= write(sock, FLAG, strlen(FLAG));
-					if(k!=-1) {printf("[Debug]lose writed\n");}
+					write(sock, FLAG, strlen(FLAG));
+					printf("[Debug]writed\n");
 				}
 			}
 
@@ -469,7 +473,9 @@ void game_Print(int any)
 	else if(B_MyGame.Win_flag==-1){printf("ERR\n");} // Win_flag -1일때 에러
 	else if(B_MyGame.my_turn==1){printf("its My turn\n");} // 내차례
 	else {printf("\n");}
-	printf("%d", B_MyGame.my_turn);
+	printf("%d\n", B_MyGame.my_turn);
+	printf("%c\n", B_MyGame.myChar);
+	printf("%d\n", B_MyGame.my_turn);
 	printf("=====================================\n");
 	printf("5:%s \n4:%s \n3:%s \n2:%s \n1:%s \n",msgQ[4],msgQ[3],msgQ[2],msgQ[1],msgQ[0]); // 채팅 출력
 	printf("=====================================\n");

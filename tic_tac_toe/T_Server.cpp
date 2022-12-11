@@ -269,20 +269,22 @@ void* handle_clnt(void* arg) {//클라이언트를 1대1로 담당하는 쓰레�
 							C[i+1].R=3;
 							OX_flag = 1;
 							sprintf(tmp,"%1s%10s","T",C[i+1].NAME);
-							send_msg(tmp,1+NAME_SIZE+BUFSIZE,5);		
+							send_msg(tmp,1+NAME_SIZE+BUFSIZE,5);	
 						}
 					}
 				}
 				for(int i=0; i<clnt_cnt;i++)
 				{
-					if(OX_flag == 0) {
+					if(OX_flag == 1) {
 						char tmp2[1+NAME_SIZE+BUFSIZE];
 						sprintf(tmp2,"%1s%10s%2s","A","O",tmpMsg);
-						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);		
-					} else if(OX_flag == 1) {
+						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);
+						printf("%s\n",tmp2);
+					} else if(OX_flag == 0) {
 						char tmp2[1+NAME_SIZE+BUFSIZE];
 						sprintf(tmp2,"%1s%10s%2s","A","X",tmpMsg);
-						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);	
+						send_msg(tmp2,1+NAME_SIZE+BUFSIZE,5);
+						printf("%s\n",tmp2);
 					}
 				}
 			}

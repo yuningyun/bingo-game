@@ -188,4 +188,48 @@ int main(int argc, char *argv[])
     printf("Game over.\n");
     close(sockfd);
     return 0;
-}
+}/*
+
+char Tic_Check() {
+	int cnt = 0;
+	if(strncmp(B_MyGame.T_board,"endgame", 7) == 0) {
+		return 's';
+	}
+	else {
+		for (int i = 0; i < T_SIZE; i++) {
+			if(B_MyGame.T_board[i] == 'e')
+				cnt++;
+		}
+		if((B_MyGame.T_board[0] == B_MyGame.T_board[1])&&(B_MyGame.T_board[1] == B_MyGame.T_board[2])&&(B_MyGame.T_board[0] != 'e')) {
+			return B_MyGame.T_board[0];
+		}
+		else if((B_MyGame.T_board[3] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[5])&&(B_MyGame.T_board[3] != 'e')) {
+			return B_MyGame.T_board[3]; 
+		}
+		else if((B_MyGame.T_board[6] == B_MyGame.T_board[7])&&(B_MyGame.T_board[7] == B_MyGame.T_board[8])&&(B_MyGame.T_board[6] != 'e')) {
+			return B_MyGame.T_board[6]; 
+		}
+		else if((B_MyGame.T_board[0] == B_MyGame.T_board[3])&&(B_MyGame.T_board[3] == B_MyGame.T_board[6])&&(B_MyGame.T_board[0] != 'e')) {
+			return B_MyGame.T_board[0]; 
+		}
+		else if((B_MyGame.T_board[1] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[7])&&(B_MyGame.T_board[1] != 'e')) {
+			return B_MyGame.T_board[1]; 
+		}
+		else if((B_MyGame.T_board[2] == B_MyGame.T_board[5])&&(B_MyGame.T_board[5] == B_MyGame.T_board[8])&&(B_MyGame.T_board[2] != 'e')) {
+			return B_MyGame.T_board[2]; 
+		}
+		else if((B_MyGame.T_board[0] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[8])&&(B_MyGame.T_board[0] != 'e')) {
+			return B_MyGame.T_board[0]; 
+		}
+		else if((B_MyGame.T_board[2] == B_MyGame.T_board[4])&&(B_MyGame.T_board[4] == B_MyGame.T_board[6])&&(B_MyGame.T_board[2] != 'e')) {
+			return B_MyGame.T_board[2]; 
+		}
+		else if(cnt==0) {
+			return 'd'; 
+		}
+		else {
+			return 'e';
+		}
+	}
+
+}*/

@@ -86,4 +86,10 @@ Server에서
     msgQ[]에 채팅 내역을 저장하고 있다.
 4. 게임현황
     win_check, clnt_cnt*clnt_cnt    누가 이기고 있는지 체크
-5. 
+
+
+![Screenshot from 2022-12-11 22-03-16](https://user-images.githubusercontent.com/90883561/206905315-a31fac99-3731-400f-9731-7fb281a2115c.png)
+
+
+
+

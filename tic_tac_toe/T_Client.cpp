@@ -556,6 +556,7 @@ void Make_Bingo()
 }
 
 void Tic_Print() {
+	printf("%c[1;95m", 27); // light purple로 출력
 	printf("| %c | %c | %c\n", B_MyGame.T_board[0], B_MyGame.T_board[1], B_MyGame.T_board[2]);
 	printf("| %c | %c | %c\n", B_MyGame.T_board[3], B_MyGame.T_board[4], B_MyGame.T_board[5]);
 	printf("| %c | %c | %c\n", B_MyGame.T_board[6], B_MyGame.T_board[7], B_MyGame.T_board[8]);

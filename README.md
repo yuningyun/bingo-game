@@ -90,20 +90,18 @@ Server에서
 
 ![Screenshot from 2022-12-11 22-03-16](https://user-images.githubusercontent.com/90883561/206905315-a31fac99-3731-400f-9731-7fb281a2115c.png)
 
-![Screenshot from 2022-12-11 22-18-56](https://user-images.githubusercontent.com/90883561/206907668-1425d03
+![Screenshot from 2022-12-11 22-18-56](https://user-images.githubusercontent.com/90883561/206907668-1425d03f-9222-451a-b3eb-40f29140e4ae.png)
 
 ![Screenshot from 2022-12-11 22-19-24](https://user-images.githubusercontent.com/90883561/206907671-c97f0b10-6013-4c27-bcf5-89ae31c200c0.png)
-f-9222-451a-b3eb-40f29140e4ae.png)
 
 ![Screenshot from 2022-12-11 22-19-42](https://user-images.githubusercontent.com/90883561/206907681-58dce90d-f5fc-45e4-afc8-944416d4d9fb.png)
-
 
 ![Screenshot from 2022-12-11 22-38-38](https://user-images.githubusercontent.com/90883561/206907686-07b0d71b-c616-4642-911a-45e0fb5e1940.png)
 
 ![Screenshot from 2022-12-11 22-39-04](https://user-images.githubusercontent.com/90883561/206907699-b1083a24-16ba-42a1-a367-e5ff90352604.png)
 
-
 ![Screenshot from 2022-12-11 22-39-57](https://user-images.githubusercontent.com/90883561/206907715-616d2bed-041f-4899-8f19-3b4ed881233f.png)
+
 ![Screenshot from 2022-12-11 22-42-00](https://user-images.githubusercontent.com/90883561/206907724-d5e22c99-c338-4942-92d5-5ea10433327d.png)
 
 ![Screenshot from 2022-12-11 22-42-26](https://user-images.githubusercontent.com/90883561/206907736-5d67065f-df12-4c1a-8624-3d56d4a659b5.png)
